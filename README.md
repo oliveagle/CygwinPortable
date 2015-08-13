@@ -81,6 +81,14 @@ Let me know if you have any problems or suggestions
 
 Tweak
 -----
-relocate $HOME use `/Other/profile/zshenv`
+#### relocate $HOME use `/Other/profile/zshenv`
 - modify and copy /Other/profile/zshenv to /etc/zshenv
 - start with mintty-zsh
+
+#### git push failed with error:
+
+	Could not create directory '/home/xxxx/.ssh'.
+    ....
+    Please make sure you have the correct access rights
+
+this is because $HOME is different in some environment. for example. your AD account mapping to /home/yourname, but CygwinPortable is set to /home/cygwin. the simplest fix is to set `db_home: /home/cygwin` in /etc/nsswitch.conf
