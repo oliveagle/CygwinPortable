@@ -348,7 +348,9 @@ os.environ["USBDRVPATH"] = portableAppsDrive
 if cybeSystemsMainSettings['Main']['WindowsPythonPath'] != "":
     os.environ["PYTHONPATH"] = cybeSystemsMainSettings['Main']['WindowsPythonPath']
 
-if not os.path.isdir(scriptpath + '\\Runtime\\cygwin\\home\\' + cybeSystemsMainSettings['Static']['Username']):
+# if not os.path.isdir(scriptpath + '\\Runtime\\cygwin\\home\\' + cybeSystemsMainSettings['Static']['Username']):
+# we can use symbolic links here. such as:  ln -s /cygdrive/d/myhome /home/myhome
+if not os.path.exists(scriptpath + '\\Runtime\\cygwin\\home\\' + cybeSystemsMainSettings['Static']['Username']):
     if os.path.isfile(scriptpath + '\\Runtime\\cygwin\\bin\\bash.exe'):
         os.makedirs(scriptpath + '\\Runtime\\cygwin\\home\\' + cybeSystemsMainSettings['Static']['Username'])
 
