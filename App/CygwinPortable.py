@@ -24,6 +24,8 @@ else:
 
 import re, time, webbrowser
 
+import logging 
+
 #########################################################################################################
 # Import Libs
 #########################################################################################################
@@ -233,6 +235,9 @@ scriptpathWinSep = os.path.realpath(os.path.dirname(sys.argv[0]))
 scriptpathParentFolder = os.path.dirname(scriptpathWinSep)
 datapath = scriptpathParentFolder + "\\Data"
 
+log_path = scriptpathParentFolder + "\\cygwin_portable.log"
+# logging.basicConfig(filename=log_path, level=logging.DEBUG)
+
 if not os.path.isdir(scriptpathParentFolder + '\\Data'):
     os.makedirs(scriptpathParentFolder + '\\Data')
 if not os.path.isdir(scriptpathParentFolder + '\\Data\\ShellScript'):
@@ -264,11 +269,14 @@ def defaultMainSettingsIni():
     cybeSystemsMainSettings['Main']['ExitAfterExec'] = False
     cybeSystemsMainSettings['Main']['SetContextMenu'] = True
     cybeSystemsMainSettings['Main']['TrayMenu'] = True
-    cybeSystemsMainSettings['Main']['Shell'] = "ConEmu"
+    # cybeSystemsMainSettings['Main']['Shell'] = "ConEmu"
+    # cybeSystemsMainSettings['Main']['Shell'] = "mintty"
+    cybeSystemsMainSettings['Main']['Shell'] = "mintty-zsh"
     cybeSystemsMainSettings['Main']['NoMsgBox'] = False
-    cybeSystemsMainSettings['Main']['CygwinMirror'] = "http://lug.mtu.edu/cygwin"
+    # cybeSystemsMainSettings['Main']['CygwinMirror'] = "http://lug.mtu.edu/cygwin"
+    cybeSystemsMainSettings['Main']['CygwinMirror'] = "http://mirrors.163.com/cygwin/"
     cybeSystemsMainSettings['Main']['CygwinPortsMirror'] = "ftp://ftp.cygwinports.org/pub/cygwinports"
-    cybeSystemsMainSettings['Main']['CygwinFirstInstallAdditions'] = "vim,X11,xinit,wget,tar,gawk,bzip2"
+    cybeSystemsMainSettings['Main']['CygwinFirstInstallAdditions'] = "vim,X11,xinit,wget,tar,gawk,bzip2,curl,zsh,git,tig"
     #cybeSystemsMainSettings['Main']['CygwinFirstInstallAdditions'] = "gawk,tar,bzip2,wget,subversion,mail,sSMTP,util-linux,ncurses,openSSH,cygrunsrv,apache2,MySQL "
     cybeSystemsMainSettings['Main']['CygwinFirstInstallDeleteUnneeded'] = True
     cybeSystemsMainSettings['Main']['InstallUnofficial'] = True
@@ -514,10 +522,15 @@ class ShowMainConfigDialog(QtWidgets.QMainWindow):
 #####################################################################################################
 
 def cygwinOpen(cygwinPath=""):
+    logging.debug("cygwinOpen started")
     cygFolder = Folder2CygFolder(cygwinPath)
+
+    logging.debug("cygFolder: %s", cygFolder)
 
     if cybeSystemsMainSettings['Main']['ExitAfterExec'] == False:
         shellStayOpen = ";exec /bin/bash.exe'"
+        if cybeSystemsMainSettings['Main']['Shell'] == "mintty-zsh":
+            shellStayOpen = ";exec /bin/zsh.exe'"
     else:
         shellStayOpen = "'"
 
@@ -528,21 +541,29 @@ def cygwinOpen(cygwinPath=""):
             if cybeSystemsMainSettings['Main']['Shell'] == "ConEmu":
                 path = scriptpath + "\\Runtime\\ConEmu\\ConEmu.exe"
                 parameter = " /cmd " + scriptpath + "\\Runtime\\cygwin\\bin\\bash.exe --login -i -c 'cd " + cygFolder[2] + executeCommand + shellStayOpen
+            elif cybeSystemsMainSettings['Main']['Shell'] == "mintty-zsh":
+                path = scriptpath + "\\Runtime\\cygwin\\bin\\mintty.exe"
+                parameter = " --config /home/" + cybeSystemsMainSettings['Static']['Username'] + "/.minttyrc -e /bin/bash.exe -c 'cd " + cygFolder[2] + executeCommand + shellStayOpen
             else:
                 path = scriptpath + "\\Runtime\\cygwin\\bin\\mintty.exe"
                 parameter = " --config /home/" + cybeSystemsMainSettings['Static']['Username'] + "/.minttyrc -e /bin/bash.exe -c 'cd " + cygFolder[2] + executeCommand + shellStayOpen
             pathname = scriptpath
             flag = 1
+            logging.debug("%s %s %s", path, parameter, pathname)
             win32api.ShellExecute(0, "open", path, parameter, pathname, flag)
     else:
         if cybeSystemsMainSettings['Main']['Shell'] == "ConEmu":
             path = scriptpath + "\\Runtime\\ConEmu\\ConEmu.exe"
             parameter = " /cmd " + scriptpath + "\\Runtime\\cygwin\\bin\\bash.exe --login -i -c 'cd " + cygFolder[0] + shellStayOpen
+        elif cybeSystemsMainSettings['Main']['Shell'] == "mintty-zsh":
+            path = scriptpath + "\\Runtime\\cygwin\\bin\\mintty.exe"
+            parameter = " --config /home/" + cybeSystemsMainSettings['Static']['Username'] + "/.minttyrc -e /bin/bash.exe -c 'cd " + cygFolder[0] + shellStayOpen
         else:
             path = scriptpath + "\\Runtime\\cygwin\\bin\\mintty.exe"
             parameter = " --config /home/" + cybeSystemsMainSettings['Static']['Username'] + "/.minttyrc -e /bin/bash.exe -c 'cd " + cygFolder[0] + shellStayOpen
         pathname = scriptpath
         flag = 1
+        logging.debug("%s %s %s", path, parameter, pathname)
         win32api.ShellExecute(0, "open", path, parameter, pathname, flag)
 
 #####################################################################################################
@@ -798,6 +819,7 @@ def firstCygwinInstall():
             os.remove(scriptpath + '\\Runtime\\Cygwin\\setup.log.full')
         except:
             pass
+    # TODO: create userhome
     print ("Cygwin Download finished")
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -932,7 +954,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.drives.setIcon(QtGui.QIcon(scriptpath + '/AppInfo/drive.png'))
         traymenu.addSeparator()
 
-        trayoption_openbash = QtWidgets.QAction(QtGui.QIcon(self.icon), "Open Bash (C:\)", self)
+        # trayoption_openbash = QtWidgets.QAction(QtGui.QIcon(self.icon), "Open Terminal (C:\)", self)
+        trayoption_openbash = QtWidgets.QAction(QtGui.QIcon(self.icon), "Open Terminal", self)
         trayoption_openbash.triggered.connect(lambda: cygwinOpen("C:\\"))
         traymenu.addAction(trayoption_openbash)
         trayoption_openbash.setIcon(QtGui.QIcon(scriptpath + '/AppInfo/appicon2_16.png'))

@@ -8,7 +8,8 @@ version = '1.0'
 Win32ConsoleName = 'CygwinPortable-Console-X86.exe'
 Win32WindowName = 'CygwinPortable-X86.exe'
 
-copyRuntime = True
+#copyRuntime = True
+copyRuntime = False
 killTasks = False
 
 ###################################################################
@@ -18,7 +19,7 @@ killTasks = False
 import re
 import urllib.request, urllib.parse, urllib.error, configparser
 from distutils.core import setup
-import sys, os, shutil, datetime, zipfile, subprocess, fnmatch,glob
+import sys, os, shutil, datetime, zipfile, subprocess, fnmatch,glob, logging
 
 import platform
 sys.path.insert(0, os.path.join(os.path.realpath(os.path.dirname(sys.argv[0])), 'lib'))
@@ -94,11 +95,13 @@ includes.append('PyQt5.QtCore')
 includes.append('PyQt5.QtGui')
 includes.append('PyQt5.QtNetwork')
 
+
 excludes.append('Tkconstants')
 excludes.append('Tkinter')
 excludes.append('PyQt4')
 excludes.append('PySide')
 
+packages.append('logging')
 packages.append('sip')
 packages.append('winshell')
 packages.append('atexit')
@@ -234,22 +237,44 @@ shutil.rmtree('build/' + x86x64BuildPath + '/PyQt5.uic.widget-plugins',ignore_er
 shutil.rmtree('build/' + x86x64BuildPath + '/imageformats',ignore_errors=True)
 
 #Prepare Portable Version
-shutil.rmtree('!RELEASE_' + x86x64 ,ignore_errors=True)
+# shutil.rmtree('!RELEASE_' + x86x64 ,ignore_errors=True)
+if os.path.exists('!RELEASE_' + x86x64 + '/App/CygwinPortable-' + x86x64 + '.exe'):
+    os.remove('!RELEASE_' + x86x64 + '/App/CygwinPortable-' + x86x64 + '.exe')
+if os.path.exists('!RELEASE_' + x86x64 + '/App/CygwinPortable-Console-' + x86x64 + '.exe'):
+    os.remove('!RELEASE_' + x86x64 + '/App/CygwinPortable-Console-' + x86x64 + '.exe')
 distutils.dir_util.copy_tree('build/' + x86x64BuildPath, '!RELEASE_' + x86x64 + '/App')
+
+shutil.rmtree('!RELEASE_' + x86x64 + '/App/AppInfo', ignore_errors=True)
 shutil.copytree('AppInfo', '!RELEASE_' + x86x64 + '/App/AppInfo')
+
+shutil.rmtree('!RELEASE_' + x86x64 + '/App/DefaultData', ignore_errors=True)
 shutil.copytree('DefaultData', '!RELEASE_' + x86x64 + '/App/DefaultData')
 
+shutil.rmtree('!RELEASE_' + x86x64 + '/Other', ignore_errors=True)
+shutil.copytree(scriptpathParentFolder + '/Other', '!RELEASE_' + x86x64 + '/Other')
+
+shutil.copyfile(scriptpathParentFolder + '/Other/Source/CygwinPortable.exe', '!RELEASE_' + x86x64 + '/CygwinPortable.exe')
+os.remove('!RELEASE_' + x86x64 + '/Other/Source/CygwinPortable.exe')
+shutil.copyfile(scriptpathParentFolder + '/help.html', '!RELEASE_' + x86x64 + '/help.html')
+
 if copyRuntime == True:
+    shutil.rmtree('!RELEASE_' + x86x64 + '/App/Runtime' ,ignore_errors=True)
     if not os.path.isdir('RuntimeClean'):
         print("RuntimeClean Folder not found - Fallback to Runtime")
         shutil.copytree('Runtime/ConEmu', '!RELEASE_' + x86x64 + '/App/Runtime/ConEmu')
     else:
         shutil.copytree('RuntimeClean', '!RELEASE_' + x86x64 + '/App/Runtime')
 
-shutil.copytree(scriptpathParentFolder + '/Other', '!RELEASE_' + x86x64 + '/Other')
-shutil.copyfile(scriptpathParentFolder + '/Other/Source/CygwinPortable.exe', '!RELEASE_' + x86x64 + '/CygwinPortable.exe')
-os.remove('!RELEASE_' + x86x64 + '/Other/Source/CygwinPortable.exe')
-shutil.copyfile(scriptpathParentFolder + '/help.html', '!RELEASE_' + x86x64 + '/help.html')
+    if not os.path.isdir('!RELEASE_' + x86x64 + '/App/Runtime/Cygwin/'):
+        os.makedirs('!RELEASE_' + x86x64 + '/App/Runtime/Cygwin/')
+    shutil.copyfile(scriptpathParentFolder + '/App/Runtime/Cygwin/setup-x86.exe', '!RELEASE_' + x86x64 + '/App/Runtime/cygwin/CygwinConfig.exe')
+
+if not os.path.isdir('!RELEASE_' + x86x64 + '/App/Runtime/Cygwin/'):
+    os.makedirs('!RELEASE_' + x86x64 + '/App/Runtime/Cygwin/')
+
+if not os.path.exists('!RELEASE_' + x86x64 + '/App/Runtime/cygwin/CygwinConfig.exe'):
+    shutil.copyfile(scriptpathParentFolder + '/App/Runtime/Cygwin/setup-x86.exe', '!RELEASE_' + x86x64 + '/App/Runtime/cygwin/CygwinConfig.exe')
+
 
 
 def fancyLogoWin():
