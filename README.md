@@ -77,3 +77,10 @@ Feedback
 Let me know if you have any problems or suggestions
 
 *Thanks for reading*
+
+
+Tweak
+-----
+relocate $HOME use `/Other/profile/zshenv`
+- modify and copy /Other/profile/zshenv to /etc/zshenv
+- start with mintty-zsh

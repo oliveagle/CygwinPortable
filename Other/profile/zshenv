@@ -1,0 +1,26 @@
+CYG_WIN_DRIVE=${"$(cygpath -w /)":0:1}
+#echo "cygwin is installed on drive: $CYG_WIN_DRIVE:"
+
+#LOCAL_HOME=d:/olehome
+LOCAL_HOME="/cygdrive/$CYG_WIN_DRIVE/olehome"
+
+#echo current home:  $HOME
+if [ -d $HOME  ]; then
+	if [ ! -L $HOME ]; then
+		echo "current home: $HOME    (not a link)"
+	else
+		echo "current home: $HOME -> " `readlink $HOME`
+	fi
+else
+	# does not exists
+	echo "$HOME does not exists !!! "
+	if [ -d $LOCAL_HOME ]; then
+		echo "link to $LOCAL_HOME"
+		ln -s $LOCAL_HOME $HOME
+		echo "current home: $HOME -> " `readlink $HOME`
+	else
+		echo "$LOCAL_HOME also does not exists! we are going to create $HOME as directory"
+		mkdir -p $HOME
+	fi
+fi
+
