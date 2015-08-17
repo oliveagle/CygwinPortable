@@ -1,25 +1,35 @@
 CYG_WIN_DRIVE=${"$(cygpath -w /)":0:1}
+CYG_WIN_DRIVE=$(echo $CYG_WIN_DRIVE | tr '[:upper:]' '[:lower:]')
 #echo "cygwin is installed on drive: $CYG_WIN_DRIVE:"
 
-#LOCAL_HOME=d:/olehome
-LOCAL_HOME="/cygdrive/$CYG_WIN_DRIVE/olehome"
+#THE_HOME=d:/olehome
+THE_HOME="/cygdrive/$CYG_WIN_DRIVE/olehome"
+echo "THE_HOME:     "$THE_HOME
 
 #echo current home:  $HOME
 if [ -d $HOME  ]; then
 	if [ ! -L $HOME ]; then
 		echo "current home: $HOME    (not a link)"
 	else
+		# if current link is not the same as we expected, we should do something. here
+		CUR_LNK=`readlink $HOME`
+		if [ ! "$CUR_LNK" -ef "$THE_HOME" ]; then
+			echo "current home is not what we expected!"
+			unlink $CUR_LNK && ln -s $THE_HOME $HOME
+		fi
+
 		echo "current home: $HOME -> " `readlink $HOME`
 	fi
 else
 	# does not exists
 	echo "$HOME does not exists !!! "
-	if [ -d $LOCAL_HOME ]; then
-		echo "link to $LOCAL_HOME"
-		ln -s $LOCAL_HOME $HOME
+	if [ -d $THE_HOME ]; then
+		echo "link to $THE_HOME"
+		#ln T -s $THE_HOME $HOME
+		ln -s $THE_HOME $HOME
 		echo "current home: $HOME -> " `readlink $HOME`
 	else
-		echo "$LOCAL_HOME also does not exists! we are going to create $HOME as directory"
+		echo "$THE_HOME also does not exists! we are going to create $HOME as directory"
 		mkdir -p $HOME
 	fi
 fi
